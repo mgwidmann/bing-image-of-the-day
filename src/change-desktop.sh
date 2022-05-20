@@ -1,10 +1,18 @@
 #!/bin/bash
 
-# Move the current image to yesterday's file and change to that desktop so that the new will register as a change instead of the same file again
-mv ~/.bing-image-of-the-day/wallpaper.jpeg ~/.bing-image-of-the-day/yesterday.jpeg
-osascript -e "tell application \"Finder\" to set desktop picture to POSIX file \"/Users/$(whoami)/.bing-image-of-the-day/yesterday.jpeg\""
+# Download the latest image as original name
+url=$(curl -s https://www.bing.com/HPImageArchive.aspx\?format\=js\&idx\=0\&n\=1\&mkt\=en-US | /opt/homebrew/bin/jq -r '.images[0] | "https://www.bing.com" + .url')
 
-# Download the latest image as wallpaper.jpeg
-curl -s https://www.bing.com/HPImageArchive.aspx\?format\=js\&idx\=0\&n\=1\&mkt\=en-US | jq -r '.images[0] | "https://www.bing.com" + .url' | xargs curl -s -o ~/.bing-image-of-the-day/wallpaper.jpeg
+echo 'Getting image:' $url
+cd ~/.bing-image-of-the-day/
+mkdir -p wallpapers
 
-osascript -e "tell application \"Finder\" to set desktop picture to POSIX file \"/Users/$(whoami)/.bing-image-of-the-day/wallpaper.jpeg\""
+# From url, drop part before name and after name, example:
+# https://www.bing.com/th?id=OHR.GlassBridge_EN-US6168516510_1920x1080.jpg&rf=LaDigue_1920x1080.jpg&pid=hp
+filename=$(echo $url | sed -E 's/(.*\?id=)|(&rf.*)//ig')
+curl $url -s -o ./wallpapers/$filename
+
+echo 'Setting file to background' "~/.bing-image-of-the-day/wallpapers/$filename"
+osascript -e "tell application \"Finder\" to set desktop picture to POSIX file \"/Users/$(whoami)/.bing-image-of-the-day/wallpapers/$filename\""
+
+touch ~/.bing-image-of-the-day/lastrun
