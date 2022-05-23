@@ -12,6 +12,9 @@ mkdir -p wallpapers
 filename=$(echo $url | sed -E 's/(.*\?id=)|(&rf.*)//ig')
 curl $url -s -o ./wallpapers/$filename
 
+# Sleep to ensure no disk buffering issue with half downloaded images
+sleep 5
+
 echo 'Setting file to background' "~/.bing-image-of-the-day/wallpapers/$filename"
 osascript -e "tell application \"Finder\" to set desktop picture to POSIX file \"/Users/$(whoami)/.bing-image-of-the-day/wallpapers/$filename\""
 
